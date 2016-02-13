@@ -80,7 +80,6 @@ int main(int argc, char **argv)
             //if snake hits the wall
             if(seg[0].x>SCREEN_W || seg[0].x<0 || seg[0].y>SCREEN_H || seg[0].y<0)
             {
-                printf("GAME OVER\n");
                 doexit = true;
             }
 
@@ -89,7 +88,6 @@ int main(int argc, char **argv)
             {
                 if(seg[0].x==seg[i].x && seg[0].y==seg[i].y)
                 {
-                    printf("GAME OVER\n");
                     doexit = true;
                 }
 
@@ -168,6 +166,8 @@ int main(int argc, char **argv)
             al_flip_display();
         }
     }
+    printf("GAME OVER\n");
+    printf("SCORE : %d\n", length*5-25);
 
     al_destroy_bitmap(block);
     al_destroy_timer(timer);
