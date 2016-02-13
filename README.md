@@ -14,7 +14,7 @@ Get the dependencies:
 
 Compile:
 
-    gcc `pkg-config --libs allegro-5.0` -o snake.out snake.c
+    gcc `pkg-config --libs allegro-5.0 allegro_font-5.0 allegro_ttf-5.0` -o snake.out snake.c
     
 Run:
 
