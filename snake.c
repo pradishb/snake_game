@@ -2,6 +2,8 @@
 #include <allegro5/allegro.h>
 #include <time.h>
 #include <stdlib.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 const float FPS = 8;
 const int SCREEN_W = 640;
@@ -9,7 +11,11 @@ const int SCREEN_H = 480;
 const int BLOCK_SIZE = 20;
 
 enum MYKEYS {
-    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
+    UP, DOWN, LEFT, RIGHT,ESCAPE,ENTER
+};
+
+enum GAME_MODES {
+    MENU, GAME
 };
 
 struct segment
@@ -31,16 +37,26 @@ int main(int argc, char **argv)
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     ALLEGRO_TIMER *timer = NULL;
     ALLEGRO_BITMAP *block = NULL;
+    ALLEGRO_BITMAP *fblock = NULL;
 
     al_init();
     al_install_keyboard();
+    al_init_font_addon();   // initialize the font addon
+    al_init_ttf_addon();    // initialize the ttf (True Type Font) addon
+
+    ALLEGRO_FONT *font = al_load_ttf_font("./fonts/abscissa.ttf",22,0);
 
     timer = al_create_timer(1.0 / FPS);
     display = al_create_display(SCREEN_W, SCREEN_H);
-    block = al_create_bitmap(BLOCK_SIZE, BLOCK_SIZE);
 
+    block = al_create_bitmap(BLOCK_SIZE, BLOCK_SIZE);
     al_set_target_bitmap(block);
     al_clear_to_color(al_map_rgb(255, 0, 0));
+
+    fblock = al_create_bitmap(BLOCK_SIZE, BLOCK_SIZE);
+    al_set_target_bitmap(fblock);
+    al_clear_to_color(al_map_rgb(255, 255, 255));
+
     al_set_target_bitmap(al_get_backbuffer(display));
 
     event_queue = al_create_event_queue();
@@ -50,8 +66,12 @@ int main(int argc, char **argv)
 
     //variable initialization
     srand(time(NULL));  //seeding random number
+    int gameMode=MENU;
+    int score=0;
     int length=5;
-    int direction = KEY_UP;
+    int direction = RIGHT;
+    bool up_down = false;
+    bool keys[6]={false,false,false,false,false,false};
     bool redraw = true;
     bool doexit = false;
     struct segment seg[(SCREEN_W*SCREEN_H)/(BLOCK_SIZE*BLOCK_SIZE)];
@@ -78,7 +98,7 @@ int main(int argc, char **argv)
         if(ev.type == ALLEGRO_EVENT_TIMER) {
             //check_death
             //if snake hits the wall
-            if(seg[0].x>SCREEN_W || seg[0].x<0 || seg[0].y>SCREEN_H || seg[0].y<0)
+            if(seg[0].x>=SCREEN_W || seg[0].x<0 || seg[0].y>=SCREEN_H || seg[0].y<0)
             {
                 doexit = true;
             }
@@ -102,19 +122,19 @@ int main(int argc, char **argv)
                 seg[i].y=seg[i-1].y;
 
             }
-            if(direction == KEY_UP)
+            if(direction == UP)
             {
                 seg[0].y-=BLOCK_SIZE;
             }
-            else if(direction == KEY_DOWN)
+            else if(direction == DOWN)
             {
                 seg[0].y+=BLOCK_SIZE;
             }
-            else if(direction == KEY_RIGHT)
+            else if(direction == RIGHT)
             {
                 seg[0].x+=BLOCK_SIZE;
             }
-            else if(direction == KEY_LEFT)
+            else if(direction == LEFT)
             {
                 seg[0].x-=BLOCK_SIZE;
             }
@@ -123,34 +143,59 @@ int main(int argc, char **argv)
             if(seg[0].x==food.x && seg[0].y==food.y)
             {
                 length++;
+                score+=5;
                 seg[length-1].x=temp.x;
                 seg[length-1].y=temp.y;
                 ranFood(&food.x,&food.y);
             }
             redraw = true;
         }
+        else if(ev.type == ALLEGRO_EVENT_KEY_DOWN || ev.type == ALLEGRO_EVENT_KEY_UP ) {
+
+            if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+                up_down = 1;
+            } else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
+                up_down = 0;
+            }
+
+            switch(ev.keyboard.keycode) {
+
+            case ALLEGRO_KEY_ESCAPE:
+                keys[ESCAPE] = up_down;
+                break;
+            case ALLEGRO_KEY_ENTER:
+                keys[ENTER] = up_down;
+                break;
+            case ALLEGRO_KEY_RIGHT:
+                keys[RIGHT] = up_down;
+                break;
+            case ALLEGRO_KEY_LEFT:
+                keys[LEFT] = up_down;
+                break;
+            case ALLEGRO_KEY_UP:
+                keys[UP] = up_down;
+                break;
+            case ALLEGRO_KEY_DOWN:
+                keys[DOWN] = up_down;
+                break;
+            }
+
+        }
         else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             break;
         }
-        else if(ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-            switch(ev.keyboard.keycode) {
-                case ALLEGRO_KEY_UP:
-                    direction = KEY_UP;
-                    break;
 
-                case ALLEGRO_KEY_DOWN:
-                    direction = KEY_DOWN;
-                    break;
+        //CHANGE SNAKE DIRECTION
+        if(keys[RIGHT])
+            direction = RIGHT;
+        else if(keys[LEFT])
+            direction = LEFT;
+        else if(keys[UP])
+            direction = UP;
+        else if(keys[DOWN])
+            direction = DOWN;
 
-                case ALLEGRO_KEY_LEFT:
-                    direction = KEY_LEFT;
-                    break;
-
-                case ALLEGRO_KEY_RIGHT:
-                    direction = KEY_RIGHT;
-                    break;
-            }
-        }
+        //DRAW
         if(redraw && al_is_event_queue_empty(event_queue) && !doexit) {
             redraw = false;
 
@@ -161,13 +206,11 @@ int main(int argc, char **argv)
                 al_draw_bitmap(block, seg[i].x, seg[i].y, 0);
             }
 
-            al_draw_bitmap(block, food.x, food.y, 0);
-
+            al_draw_bitmap(fblock, food.x, food.y, 0);
+            al_draw_textf(font, al_map_rgb(255,255,255), 15, SCREEN_H-40,ALLEGRO_ALIGN_LEFT, "Score : %d",score);
             al_flip_display();
         }
     }
-    printf("GAME OVER\n");
-    printf("SCORE : %d\n", length*5-25);
 
     al_destroy_bitmap(block);
     al_destroy_timer(timer);
