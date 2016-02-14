@@ -120,6 +120,7 @@ int main(int argc, char **argv)
 
     //game initialization
     float speed;
+    float level;
     int play;
     int score;
     int length;
@@ -205,7 +206,8 @@ int main(int argc, char **argv)
                     {
                         length++;
                         score+=5;
-                        speed+=.05;
+                        level+=0.2;
+                        speed=((int)(level))/3.0+1.0;
                         seg[length-1].x=temp.x;
                         seg[length-1].y=temp.y;
                         ranFood(&food.x,&food.y);
@@ -283,13 +285,15 @@ int main(int argc, char **argv)
             {
                 game_state=GAME;
                 redraw=true;
-                speed=1.0;
+                level=1.0;
+                speed=((int)(level))/3.0+1.0;
                 play=0;
                 score=0;
                 length=5;
                 direction = RIGHT;
                 s_direction = RIGHT;
                 ranFood(&food.x,&food.y);
+                read_scores(top_players[0],top_scores);
 
                 for(int i=0;i<length;i++)
                 {
@@ -322,13 +326,15 @@ int main(int argc, char **argv)
             {
                 game_state=GAME;
                 redraw=true;
-                speed=1.0;
+                level=1.0;
+                speed=((int)(level))/3.0+1.0;
                 play=0;
                 score=0;
                 length=5;
                 direction = RIGHT;
                 s_direction = RIGHT;
                 ranFood(&food.x,&food.y);
+                read_scores(top_players[0],top_scores);
 
                 for(int i=0;i<length;i++)
                 {
@@ -400,7 +406,7 @@ int main(int argc, char **argv)
             if(ev.type == ALLEGRO_EVENT_KEY_CHAR) {
                 int unichar = ev.keyboard.unichar;
                 int buffer_length=al_ustr_length(input);
-                if (unichar >= 32 && buffer_length<12)
+                if (unichar >= 32 && buffer_length<11)
                     al_ustr_append_chr(input, unichar);
                 if(keys[BACKSPACE])
                 {
@@ -427,7 +433,7 @@ int main(int argc, char **argv)
 
                 al_draw_bitmap(fblock, food.x, food.y, 0);
                 al_draw_textf(font[1], al_map_rgb(255,255,255), 15, SCREEN_H-40,ALLEGRO_ALIGN_LEFT, "Score : %d",score);
-                al_draw_textf(font[1], al_map_rgb(255,255,255), 15, SCREEN_H-70,ALLEGRO_ALIGN_LEFT, "Level: %.0f",speed);
+                al_draw_textf(font[1], al_map_rgb(255,255,255), 15, SCREEN_H-70,ALLEGRO_ALIGN_LEFT, "Level: %d",(int)level);
             }
             else if(game_state==MENU)
             {
